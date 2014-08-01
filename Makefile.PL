@@ -20,6 +20,7 @@ WriteMakefile(
         'Moose'              => 0,
         'Mojo::UserAgent'    => 0,
         'Mojo::Headers'      => 0,
+        'Tie::Hash::LRU'     => 0,
         'Mojo::Path'         => 0,
         'Mojo::URL'          => 0,
         'Net::OAuth::Simple' => 0,

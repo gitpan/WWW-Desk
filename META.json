@@ -42,6 +42,7 @@
             "Mojo::UserAgent" : "0",
             "Moose" : "0",
             "Net::OAuth::Simple" : "0",
+            "Tie::Hash::LRU" : "0",
             "perl" : "5.006"
          }
       }
@@ -53,5 +54,5 @@
       },
       "homepage" : "https://github.com/binary-com/perl-WWW-Desk"
    },
-   "version" : "0.02"
+   "version" : "0.03"
 }

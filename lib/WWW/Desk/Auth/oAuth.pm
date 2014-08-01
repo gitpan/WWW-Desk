@@ -5,8 +5,10 @@ use strict;
 use warnings;
 
 use Moose;
-use Net::OAuth::Simple;
+use Mojo::Path;
 use Mojo::URL;
+use Net::OAuth::Client;
+use Tie::Hash::LRU;
 
 =head1 NAME
 
@@ -14,11 +16,14 @@ WWW::Desk::Auth::oAuth - Desk.com oAuth Authentication
 
 =head1 VERSION
 
-Version 0.01
+Version 0.02
 
 =cut
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
+
+our %session;
+our $lru = tie %session, 'Tie::Hash::LRU', 100;
 
 =head1 ATTRIBUTES
 
@@ -60,47 +65,83 @@ has 'desk_url' => (
 
 =head2 callback_url
 
-REQUIRED - desk.com oauth callback url
+REQUIRED - desk.com oauth callback URI
+
+It must be a URI object
 
 =cut
 
 has 'callback_url' => (
     is       => 'ro',
-    isa      => 'Str',
+    isa      => 'URI',
     required => 1,
+);
+
+=head2 debug
+
+debug oAuth Requests - boolean type
+
+=cut
+
+has 'debug' => (
+    is       => 'ro',
+    isa      => 'Bool',
+    lazy     => 1,
+    default  => sub {
+        return 0;
+    }
+);
+
+=head2 api_version
+
+desk.com api version
+
+=cut
+
+has 'api_version' => (
+    is      => 'ro',
+    isa     => 'Str',
+    lazy    => 1,
+    default => sub {
+        return "v2";
+    }
 );
 
 =head2 auth_client
 
-Net::OAuth::Simple OAuth protocol object wrapper
+Net::OAuth::Client OAuth protocol object wrapper
 
 =cut
 
 has 'auth_client' => (
     is         => 'ro',
-    isa        => 'Net::OAuth::Simple',
+    isa        => 'Net::OAuth::Client',
     lazy_build => 1
 );
 
 sub _build_auth_client {
     my ($self) = @_;
-    return Net::OAuth::Simple->new(
-        tokens => {
-            consumer_key    => $self->api_key,
-            consumer_secret => $self->secret_key,
-        },
-        protocol_version => '1.0a',
-        urls             => {
-            authorization_url => $self->_prepare_url('/oauth/authorize'),
-            request_token_url => $self->_prepare_url('/oauth/request_token'),
-            access_token_url  => $self->_prepare_url('/oauth/access_token')
-        }
+    return Net::OAuth::Client->new(
+            $self->api_key,
+            $self->secret_key,
+            protocol_version => '1.0a',
+	    site               => $self->desk_url,
+            authorize_path     => '/oauth/authorize',
+            request_token_path => '/oauth/request_token',
+            access_token_path  => '/oauth/access_token',
+	    callback           => $self->callback_url,
+	    session 	       => \&_session,
+            debug              => $self->debug
     );
 }
 
-sub _prepare_url {
-    my ( $self, $path ) = @_;
-    return Mojo::URL->new( $self->desk_url )->path($path)->to_abs();
+sub _session{
+    my ( @data ) = @_;
+    if ( $data[0] && $data[1] ) {
+        %session = ( $data[0] => $data[1] );
+        return %session;
+    }
+    return $session{$data[0]};
 }
 
 =head1 SYNOPSIS
@@ -114,26 +155,17 @@ sub _prepare_url {
         'callback_url' => 'https://myapp.com/callback'
     );
 
-    if ( $auth->is_authorize ){
-        // make restricted content request
-    }
-    else {
-        print "Please visit this url to authorize ". $auth->authorization_url;
-    }
+    # Visit authorization_url, approve it
+    $auth->authorization_url;
+
+    # Use the auth code to fetch the access token
+    my $access_token =  vars->{auth_client}->request_access_token(params->{oauth_token}, params->{oauth_verifier});
+
+    # Use the access token to fetch a protected resource
+    my $response = $access_token->get( $auth->build_api_url('/customers') );
 
 
 =head1 SUBROUTINES/METHODS
-
-=head2 is_authorized
-
-Whether the client has the necessary credentials to be authorized. Authorization url can be used to get the authentication 
-
-=cut
-
-sub is_authorized {
-    my ($self) = @_;
-    return $self->auth_client->authorized;
-}
 
 =head2 authorization_url
 
@@ -143,30 +175,45 @@ Authorization url the user needs to visit to authorize
 
 sub authorization_url {
     my ($self) = @_;
-    return $self->auth_client->get_authorization_url(
-        callback => $self->callback_url )->as_string;
+    return $self->auth_client->authorize_url;
 }
 
-=head2 request_token
+=head2 request_access_token
 
-Returns the current request token. 
+Request the access token and access token secret for this user.
+
+The user must have authorized this app at the url given by authorization_url first.
+
+Returns the access token and access token secret but also sets them internally so that after calling this method you can immediately call a restricted method.
+
+It accept two parameters $oauth_token, $oauth_verifier.
 
 =cut
 
-sub request_token {
-    my ($self) = @_;
-    return $self->auth_client->request_token;
+sub request_access_token {
+    my ($self, $oauth_token, $oauth_verifier) = @_;
+    $self->{'oauth_token'} = $oauth_token;
+    $self->{'oauth_verifier'} = $oauth_verifier;
+    return $self->auth_client->get_access_token($oauth_token, $oauth_verifier);
 }
 
-=head2 request_token_secret
+=head2 build_api_url
 
-Returns the current request token secret. 
+It build the api abosulte url with the path your supplied
+
+Takes path as input format
 
 =cut
 
-sub request_token_secret {
-    my ($self) = @_;
-    return $self->auth_client->request_token_secret;
+sub build_api_url {
+    my ( $self, $path ) = @_;
+    my $api_version = $self->api_version;
+    my $new_path    = Mojo::Path->new($path);
+    $path = $new_path->leading_slash(0);
+    my $url =
+      Mojo::URL->new( $self->desk_url )->path("/api/$api_version/$path")
+      ->to_abs();
+    return $url;
 }
 
 =head1 AUTHOR

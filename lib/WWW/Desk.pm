@@ -14,11 +14,11 @@ WWW::Desk - Desk.com perl API
 
 =head1 VERSION
 
-Version 0.02
+Version 0.03
 
 =cut
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 =head1 SYNOPSIS
 
@@ -36,6 +36,9 @@ WWW::Desk will allow you make all API calls using HTTP or oAuth authentication
         'authentication' => $auth,
     );
     my $response = $desk->call('/cases','GET', {'locale' => 'en_US'} );
+
+
+NOTE: Checkout demo/oAuth_demo.pl for oauth demo application
 
 =cut
 
@@ -132,9 +135,8 @@ sub call {
             $request_url => $http_headers => $json_params );
     }
     elsif ( ref($authentication) eq 'WWW::Desk::Auth::oAuth' ) {
-        $response =
-          $authentication->auth_client->view_restricted_resource( $request_url,
-            $http_method, $params );
+        return $self->_prepare_response( "501",
+            "Command line doesn't support oAuth Authentication" );
     }
     else {
         return $self->_prepare_response( "501",

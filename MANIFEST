@@ -3,6 +3,7 @@ lib/WWW/Desk.pm
 lib/WWW/Desk/Browser.pm
 lib/WWW/Desk/Auth/HTTP.pm
 lib/WWW/Desk/Auth/oAuth.pm
+demo/oAuth_demo.pl
 Makefile.PL
 MANIFEST
 README
