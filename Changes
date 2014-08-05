@@ -8,3 +8,9 @@ Revision history for WWW-Desk
 
 0.03    01/08/2014
         Demo application for oAuth work and oAuth class improvement
+
+0.04    01/08/2014
+        oAuth test case
+
+0.05    06/08/2014
+        more test coverage

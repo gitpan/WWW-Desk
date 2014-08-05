@@ -14,11 +14,11 @@ WWW::Desk - Desk.com perl API
 
 =head1 VERSION
 
-Version 0.03
+Version 0.05
 
 =cut
 
-our $VERSION = '0.03';
+our $VERSION = '0.05';
 
 =head1 SYNOPSIS
 
@@ -142,7 +142,12 @@ sub call {
         return $self->_prepare_response( "501",
             "Authentication Not Implemented" );
     }
+
     my $error = $response->error;
+
+    return $self->_prepare_response( 404, $error )
+	if ref $error ne 'HASH';
+
     return $self->_prepare_response( $error->{'code'} || 408,
         $error->{'message'} )
       if $error;

@@ -23,7 +23,9 @@
       "build" : {
          "requires" : {
             "Test::Exception" : "0",
-            "Test::More" : "0"
+            "Test::FailWarnings" : "0",
+            "Test::More" : "0",
+            "Test::NoWarnings" : "0"
          }
       },
       "configure" : {
@@ -54,5 +56,5 @@
       },
       "homepage" : "https://github.com/binary-com/perl-WWW-Desk"
    },
-   "version" : "0.03"
+   "version" : "0.05"
 }

@@ -13,8 +13,10 @@ WriteMakefile(
     MIN_PERL_VERSION   => 5.006,
     CONFIGURE_REQUIRES => { 'ExtUtils::MakeMaker' => 0, },
     BUILD_REQUIRES     => {
-        'Test::More'      => 0,
-        'Test::Exception' => 0,
+	    'Test::NoWarnings'   => 0,
+        'Test::More'         => 0,
+        'Test::FailWarnings' => 0,
+        'Test::Exception'    => 0,
     },
     PREREQ_PM => {
         'Moose'              => 0,

@@ -159,10 +159,12 @@ sub _session{
     $auth->authorization_url;
 
     # Use the auth code to fetch the access token
-    my $access_token =  vars->{auth_client}->request_access_token(params->{oauth_token}, params->{oauth_verifier});
+    my $access_token =  $auth->request_access_token(params->{oauth_token}, params->{oauth_verifier});
 
     # Use the access token to fetch a protected resource
     my $response = $access_token->get( $auth->build_api_url('/customers') );
+
+NOTE: Checkout demo/oAuth_demo.pl for oauth demo application
 
 
 =head1 SUBROUTINES/METHODS
