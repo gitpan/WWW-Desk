@@ -36,6 +36,7 @@
       "runtime" : {
          "requires" : {
             "Carp" : "0",
+            "IO::Socket::SSL" : "1.84",
             "MIME::Base64" : "0",
             "Mojo::Headers" : "0",
             "Mojo::JSON" : "0",
@@ -56,5 +57,5 @@
       },
       "homepage" : "https://github.com/binary-com/perl-WWW-Desk"
    },
-   "version" : "0.05"
+   "version" : "0.06"
 }

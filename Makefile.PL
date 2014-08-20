@@ -19,6 +19,7 @@ WriteMakefile(
         'Test::Exception'    => 0,
     },
     PREREQ_PM => {
+	'IO::Socket::SSL'    => 1.84,
         'Moose'              => 0,
         'Mojo::UserAgent'    => 0,
         'Mojo::Headers'      => 0,
